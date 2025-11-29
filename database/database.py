@@ -1,0 +1,40 @@
+import os
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+from threading import Lock
+
+Base = declarative_base()
+
+class Database:
+    _instance = None
+    _lock = Lock()
+
+    def __new__(cls):
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super(Database, cls).__new__(cls)
+                    cls._instance._init_engine()
+        return cls._instance
+
+    def _init_engine(self):
+        load_dotenv()
+
+        user = os.getenv("DB_USER")
+        password = os.getenv("DB_PASSWORD")
+        host = os.getenv("DB_HOST")
+        port = os.getenv("DB_PORT")
+        dbname = os.getenv("DB_NAME")
+
+        self.engine = create_engine(
+            f"postgresql+psycopg://{user}:{password}@{host}:{port}/{dbname}",
+            echo=False,
+            pool_size=5,
+            max_overflow=10
+        )
+
+        self.SessionLocal = sessionmaker(bind=self.engine)
+
+    def get_session(self):
+        return self.SessionLocal()
