@@ -7,6 +7,9 @@ from threading import Lock
 Base = declarative_base()
 
 class Database:
+    '''
+    Class for managing database connections
+    '''
     _instance = None
     _lock = Lock()
     _tables_created = False

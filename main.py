@@ -3,8 +3,11 @@ from model.product import Product
 from database.database import Database
 
 if __name__ == '__main__':
-    print('Starting application...')
+    print('Goodbye, world!')
 
+    '''
+    # Example to insert data into database
+    # Inserting data will be managed by the repositories
     database = Database()
 
     session = database.get_session()
@@ -18,3 +21,4 @@ if __name__ == '__main__':
 
     session.add(site)
     session.commit()
+    '''
