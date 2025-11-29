@@ -1,19 +1,12 @@
 from model.website import Website
 from model.product import Product
-from database.database import Database, Base
-from model import *
+from database.database import Database
 
 if __name__ == '__main__':
-    print('Goodbye, world!')
+    print('Starting application...')
 
-    '''
-    # Creating tables
     database = Database()
-    engine = database.engine
-    Base.metadata.create_all(engine)
 
-
-    # Inserting data
     session = database.get_session()
 
     site = Website(website_name="Test Shop")
@@ -25,4 +18,3 @@ if __name__ == '__main__':
 
     session.add(site)
     session.commit()
-    '''

@@ -9,6 +9,7 @@ Base = declarative_base()
 class Database:
     _instance = None
     _lock = Lock()
+    _tables_created = False
 
     def __new__(cls):
         if cls._instance is None:
@@ -37,4 +38,9 @@ class Database:
         self.SessionLocal = sessionmaker(bind=self.engine)
 
     def get_session(self):
+        # Get a database session, ensuring tables are created first
+        if not Database._tables_created:
+            Base.metadata.create_all(self.engine)
+            Database._tables_created = True
+            print("Tables created/verified successfully!")
         return self.SessionLocal()
