@@ -24,6 +24,11 @@ class WebsiteRepository:
             return session.query(Website).filter(Website.id == websiteId).first()
 
 
+    def getWebsiteByName(self, websiteName)->Website|None:
+        with self.__db.session() as session:
+            return session.query(Website).filter(Website.website_name == websiteName).first()
+
+
     def createWebsite(self, website)->None:
         with self.__db.session() as session:
             session.add(website)

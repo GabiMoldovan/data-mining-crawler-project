@@ -7,6 +7,9 @@ class WebsiteService:
     def getWebsiteById(self, websiteId):
         return self.__websiteRepository.getWebsiteById(websiteId)
 
+    def getWebsiteByName(self, websiteName):
+        return self.__websiteRepository.getWebsiteByName(websiteName)
+
     def createWebsite(self, website):
         self.__websiteRepository.createWebsite(website)
 
