@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from threading import Lock
+from contextlib import contextmanager
 
 Base = declarative_base()
 
@@ -47,3 +48,19 @@ class Database:
             Database._tables_created = True
             print("Tables created/verified successfully!")
         return self.SessionLocal()
+
+    @contextmanager
+    def session(self):
+        """
+        Context manager that automatically closes the session.
+        Also automatically rolls back on exception, and commits if successful.
+        """
+        session = self.get_session()
+        try:
+            yield session
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
