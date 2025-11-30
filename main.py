@@ -7,8 +7,14 @@ from service.websiteService import WebsiteService
 if __name__ == '__main__':
     print('Goodbye, world!')
 
-    websiteRepository = WebsiteRepository()
-    websiteService = WebsiteService(websiteRepository)
+    try:
+        websiteRepository = WebsiteRepository()
+        websiteService = WebsiteService(websiteRepository)
+
+        site = Website(website_name="Test Shop")
+        websiteService.createWebsite(site)
+    except Exception as ex:
+        print(ex)
 
     '''
     # Example on how to use the website service
