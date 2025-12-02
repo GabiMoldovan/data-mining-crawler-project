@@ -2,49 +2,18 @@ from model.website import Website
 from model.product import Product
 from database.database import Database
 from repository.websiteRepository import WebsiteRepository
+from service.scraperService import ScraperService
 from service.websiteService import WebsiteService
+import asyncio
 
-if __name__ == '__main__':
-    print('Goodbye, world!')
+async def main():
+    scraper = ScraperService()
 
-    try:
-        websiteRepository = WebsiteRepository()
-        websiteService = WebsiteService(websiteRepository)
+    test_url = "https://www.bershka.com/ro/hanorac-oversize-fermoar-glug%C4%83-c0p193051059.html?colorId=717"
 
-        site = Website(website_name="Test Shop")
-        websiteService.createWebsite(site)
-    except Exception as ex:
-        print(ex)
+    result = await scraper.scrapeURL(test_url)
 
-    '''
-    # Example on how to use the website service
+    print(result)
 
-    site = Website(website_name="Test Shop")
-    
-    websiteService.createWebsite(site)
-    
-    p1 = Product(product_name="Laptop", price=4999, website_id=site.id)
-    p2 = Product(product_name="Mouse", price=99, website_id=site.id)
-
-    websiteService.addProduct(p1)
-    websiteService.addProduct(p2)
-    '''
-
-
-    '''
-    # Example to insert data into database
-    # Inserting data will be managed by the repositories
-    database = Database()
-
-    session = database.get_session()
-
-    site = Website(website_name="Test Shop")
-    p1 = Product(product_name="Laptop", price=4999)
-    p2 = Product(product_name="Mouse", price=99)
- 
-    site.products.append(p1)
-    site.products.append(p2)
-
-    session.add(site)
-    session.commit()
-    '''
+if __name__ == "__main__":
+    asyncio.run(main())
