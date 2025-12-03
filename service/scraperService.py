@@ -1,4 +1,3 @@
-from urllib.parse import urlparse
 from crawl4ai import AsyncWebCrawler
 import re
 import json
@@ -245,7 +244,7 @@ class ScraperService:
 
         return product
 
-    async def scrapeURL(self, url: str, output_file: str = "product.html") -> dict:
+    async def scrapeURL(self, url: str) -> dict:
         output_file = "product.html"
 
         async with AsyncWebCrawler(verbose=True) as crawler:

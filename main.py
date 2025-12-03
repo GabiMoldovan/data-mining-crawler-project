@@ -1,9 +1,4 @@
-from model.website import Website
-from model.product import Product
-from database.database import Database
-from repository.websiteRepository import WebsiteRepository
 from service.scraperService import ScraperService
-from service.websiteService import WebsiteService
 import asyncio
 
 async def main():
