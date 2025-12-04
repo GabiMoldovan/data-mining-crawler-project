@@ -12,8 +12,6 @@ from service.websiteService import WebsiteService
 async def main():
     print("Goodbye, world!")
 
-    database = Database()
-
     try:
         websiteRepository = WebsiteRepository()
         websiteService = WebsiteService(websiteRepository)
