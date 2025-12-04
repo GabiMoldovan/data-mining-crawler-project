@@ -14,3 +14,10 @@ class Website(Base):
         lazy="select",
         cascade="all, delete-orphan"
     )
+
+    crawled_urls = relationship(
+        "CrawledUrl",
+        back_populates="website",
+        lazy="select",
+        cascade="all, delete-orphan"
+    )

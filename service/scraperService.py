@@ -3,6 +3,8 @@ import re
 import json
 import html as html_mod
 
+from model import Product, Color, Origin, ProductImage
+
 
 class ScraperService:
     _instance = None
@@ -273,3 +275,76 @@ class ScraperService:
                 }
 
             return product_data
+
+    def createProduct(self, product_data: dict, website_id: int) -> Product:
+        product = Product(
+            product_name=product_data.get("name"),
+            product_description=product_data.get("description"),
+            product_url=product_data.get("url"),
+            product_main_image=product_data.get("main_image"),
+            product_price=product_data.get("price"),
+            product_sku=product_data.get("sku"),
+            product_reference=product_data.get("reference"),
+            product_display_reference=product_data.get("display_reference"),
+            product_in_stock=product_data.get("stock"),
+            product_reference_text=product_data.get("reference_text"),
+            product_model_height=product_data.get("model_height"),
+            product_model_size=product_data.get("model_size"),
+            product_model_name=product_data.get("model_name"),
+            product_extra_info=product_data.get("extra_info"),
+            website_id=website_id,
+        )
+
+        colors_data = product_data.get("colors", [])
+        seen_color_ids = set()
+
+        for color_dict in colors_data:
+            color_id = color_dict.get("id")
+            color_name = color_dict.get("name")
+
+            if not color_id:
+                continue
+
+            if color_id in seen_color_ids:
+                continue
+
+            seen_color_ids.add(color_id)
+
+            color = Color(
+                color_id=color_id,
+                name=color_name,
+            )
+
+            product.colors.append(color)
+
+        origins_data = product_data.get("origins", [])
+        seen_origin_names = set()
+
+        for origin_name in origins_data:
+            if not origin_name:
+                continue
+
+            if origin_name in seen_origin_names:
+                continue
+
+            seen_origin_names.add(origin_name)
+
+            origin = Origin(name=origin_name)
+            product.origins.append(origin)
+
+        images_data = product_data.get("all_images", [])
+        seen_image_urls = set()
+
+        for url in images_data:
+            if not url:
+                continue
+
+            if url in seen_image_urls:
+                continue
+
+            seen_image_urls.add(url)
+
+            product_image = ProductImage(image_url=url)
+            product.images.append(product_image)
+
+        return product

@@ -6,6 +6,7 @@ from .website import Website
 from .color import Color
 from .origin import Origin
 from .productImage import ProductImage
+from .crawledUrl import CrawledUrl
 
 product_colors_table = Table(
     "products_colors",

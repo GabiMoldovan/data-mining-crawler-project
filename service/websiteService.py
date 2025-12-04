@@ -1,5 +1,6 @@
 from sqlalchemy import Integer
 
+from model import CrawledUrl
 from model.product import Product
 from model.website import Website
 
@@ -24,3 +25,6 @@ class WebsiteService:
 
     def addProduct(self, product: Product) -> None:
         self.__websiteRepository.addProduct(product)
+
+    def addCrawledWebsiteUrl(self, crawledUrl: CrawledUrl) -> None:
+        self.__websiteRepository.addCrawledWebsiteUrl(crawledUrl)
