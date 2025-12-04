@@ -1,20 +1,39 @@
+from database import Database
+from model.product import Product
+from model.website import Website
+from repository.websiteRepository import WebsiteRepository
 from service.crawlerService import CrawlerService
 from service.scraperService import ScraperService
 import asyncio
+
+from service.websiteService import WebsiteService
 
 
 async def main():
     print("Goodbye, world!")
 
-    '''
+    database = Database()
+
+    try:
+        websiteRepository = WebsiteRepository()
+        websiteService = WebsiteService(websiteRepository)
+
+        websiteService.deleteEverythingFromDatabase()
+        site = Website(website_name="Test Shop")
+        websiteService.createWebsite(site)
+    except Exception as ex:
+        print(ex)
+
+
     scraper = ScraperService()
 
     test_url = "https://www.bershka.com/ro/hanorac-oversize-fermoar-glug%C4%83-c0p193051059.html?colorId=717"
 
     result = await scraper.scrapeURL(test_url)
 
-    print(result)
-    '''
+    result = scraper.createProduct(result, 1)
+
+    print(result.toString())
 
     '''
     try:

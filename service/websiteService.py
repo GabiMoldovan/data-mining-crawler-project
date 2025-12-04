@@ -1,6 +1,8 @@
 from sqlalchemy import Integer
 
-from model import Website, Product
+from model import CrawledUrl
+from model.product import Product
+from model.website import Website
 
 
 class WebsiteService:
@@ -8,6 +10,9 @@ class WebsiteService:
                  websiteRepository,
                  ):
         self.__websiteRepository = websiteRepository
+
+    def deleteEverythingFromDatabase(self) -> None:
+        return self.__websiteRepository.deleteEverythingFromDatabase()
 
     def getWebsiteById(self, websiteId: Integer) -> Website|None:
         return self.__websiteRepository.getWebsiteById(websiteId)
@@ -20,3 +25,6 @@ class WebsiteService:
 
     def addProduct(self, product: Product) -> None:
         self.__websiteRepository.addProduct(product)
+
+    def addCrawledWebsiteUrl(self, crawledUrl: CrawledUrl) -> None:
+        self.__websiteRepository.addCrawledWebsiteUrl(crawledUrl)

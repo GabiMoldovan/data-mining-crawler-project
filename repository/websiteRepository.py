@@ -1,7 +1,9 @@
 from sqlalchemy import Integer
 
-from database import Database
-from model import Website, Product
+from database import Database, Base
+from model import CrawledUrl
+from model.product import Product
+from model.website import Website
 
 
 class WebsiteRepository:
@@ -19,6 +21,13 @@ class WebsiteRepository:
 
         self.__db = Database()
         self._initialized = True
+
+
+    def deleteEverythingFromDatabase(self):
+        with self.__db.session() as session:
+            for table in reversed(Base.metadata.sorted_tables):
+                session.execute(table.delete())
+            session.commit()
 
 
     def getWebsiteById(self, websiteId: Integer)->Website|None:
@@ -39,3 +48,8 @@ class WebsiteRepository:
     def addProduct(self, product: Product)->None:
         with self.__db.session() as session:
             session.add(product)
+
+
+    def addCrawledWebsiteUrl(self, crawledUrl: CrawledUrl)->None:
+        with self.__db.session() as session:
+            session.add(crawledUrl)
