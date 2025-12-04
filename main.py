@@ -1,10 +1,28 @@
+from database import Database
+from model.product import Product
+from model.website import Website
+from repository.websiteRepository import WebsiteRepository
 from service.crawlerService import CrawlerService
 from service.scraperService import ScraperService
 import asyncio
 
+from service.websiteService import WebsiteService
+
 
 async def main():
     print("Goodbye, world!")
+
+    database = Database()
+
+    try:
+        websiteRepository = WebsiteRepository()
+        websiteService = WebsiteService(websiteRepository)
+
+        site = Website(website_name="Test Shop")
+        websiteService.createWebsite(site)
+    except Exception as ex:
+        print(ex)
+
 
     '''
     scraper = ScraperService()

@@ -1,7 +1,8 @@
 from sqlalchemy import Integer
 
 from database import Database
-from model import Website, Product
+from model.product import Product
+from model.website import Website
 
 
 class WebsiteRepository:
@@ -19,6 +20,9 @@ class WebsiteRepository:
 
         self.__db = Database()
         self._initialized = True
+
+    def deleteEverythingFromDatabase(self):
+        pass
 
 
     def getWebsiteById(self, websiteId: Integer)->Website|None:
