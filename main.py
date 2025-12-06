@@ -29,7 +29,7 @@ async def main():
 
     result = await scraper.scrapeURL(test_url)
 
-    result = scraper.createProduct(result, 1)
+    result = scraper.createProductWithScrapedData(result, 1)
 
     print(result.toString())
 

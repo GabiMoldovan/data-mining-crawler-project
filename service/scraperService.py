@@ -276,7 +276,7 @@ class ScraperService:
 
             return product_data
 
-    def createProduct(self, product_data: dict, website_id: int) -> Product:
+    def createProductWithScrapedData(self, product_data: dict, website_id: int) -> Product:
         product = Product(
             product_name=product_data.get("name"),
             product_description=product_data.get("description"),
