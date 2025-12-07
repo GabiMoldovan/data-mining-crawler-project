@@ -97,3 +97,14 @@ class Menu:
                 except Exception as e:
                     print(f"Error in main: {e}")
                     return None
+
+            elif option == 2:
+                websiteUrl = "https://www.bershka.com/ro/"
+                website_id = self.__websiteService.getWebsiteByName(websiteUrl).id
+
+                product_url = "https://www.bershka.com/ro/pulover-multicolor-cu-aspect-periat-c0p200458828.html?colorId=507"
+                scraped_product_from_url = await self.__scraperService.scrapeURL(product_url)
+                result = self.__scraperService.createProductWithScrapedData(scraped_product_from_url, website_id)
+
+                print("The scraped product from the URL is:")
+                print(result.toString())
