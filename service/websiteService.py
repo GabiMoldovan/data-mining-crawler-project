@@ -28,3 +28,4 @@ class WebsiteService:
 
     def addCrawledWebsiteUrl(self, crawledUrl: CrawledUrl) -> None:
         self.__websiteRepository.addCrawledWebsiteUrl(crawledUrl)
+

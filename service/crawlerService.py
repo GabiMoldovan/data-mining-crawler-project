@@ -337,8 +337,8 @@ class CrawlerService:
 
         # Print sample URLs
         if filtered_result:
-            print(f"\nFirst 20 valid URLs:")
-            for i, url in enumerate(filtered_result[:20]):
+            print(f"\nValid URLs:")
+            for i, url in enumerate(filtered_result):
                 status = "[OK]" if url.startswith('https://www.bershka.com/ro') else "[FAIL]"
                 print(f"  {i + 1:2d}. {status} {url}")
 
@@ -351,7 +351,7 @@ class CrawlerService:
             'filtered_urls': filtered_result,
             'categorization': categorization,
             'validation': validation,
-            'sample_urls': filtered_result[:20] if filtered_result else []
+            'sample_urls': filtered_result if filtered_result else []
         }
 
     def close(self):
