@@ -46,6 +46,7 @@ class Menu:
                     self.__websiteService.createWebsite(website)
                     website_id = self.__websiteService.getWebsiteByName(websiteUrl).id
 
+                    # Number of pages that you want to crawl. Maybe make it to be given as input?
                     max_pages = 50
 
                     # Crawl website
