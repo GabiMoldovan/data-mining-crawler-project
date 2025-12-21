@@ -27,8 +27,9 @@ class Menu:
             print(
                 "1. Ruleaza crawler pe Bershka si extrage produsele (!!! SE STERG PRODUSELE EXTRASE ANTERIOR DIN BAZA DE DATE !!!)")
             print("2. Scrape URL")
-            print("3. Tehnica de data mining")
-            print("4. Exit\n")
+            print("3. Tehnica de data mining 1")
+            print("4. Tehnica de data mining 2")
+            print("5. Exit\n")
 
             option = int(await asyncio.to_thread(input, "Alegeti optiunea: "))
             print()
@@ -45,7 +46,8 @@ class Menu:
                     self.__websiteService.createWebsite(website)
                     website_id = self.__websiteService.getWebsiteByName(websiteUrl).id
 
-                    max_pages = 10
+                    # Number of pages that you want to crawl. Maybe make it to be given as input?
+                    max_pages = 50
 
                     # Crawl website
                     results = await asyncio.to_thread(
@@ -61,10 +63,14 @@ class Menu:
                         lambda: open("product_urls.txt", "r", encoding="utf-8").read().splitlines()
                     )
 
-                    for line in lines:
+                    total_products = len(lines)
+
+                    for i, line in enumerate(lines, start=1):
                         line_url = line.strip()
                         if not line_url:
                             continue
+
+                        print(f"Scraping product {i} out of {total_products}")
 
                         # Create CrawledUrl entity and persist it
                         crawled_url = CrawledUrl(
@@ -102,9 +108,21 @@ class Menu:
                 websiteUrl = "https://www.bershka.com/ro/"
                 website_id = self.__websiteService.getWebsiteByName(websiteUrl).id
 
+                # Maybe make the URL to be given as input
                 product_url = "https://www.bershka.com/ro/pulover-multicolor-cu-aspect-periat-c0p200458828.html?colorId=507"
                 scraped_product_from_url = await self.__scraperService.scrapeURL(product_url)
                 result = self.__scraperService.createProductWithScrapedData(scraped_product_from_url, website_id)
 
                 print("The scraped product from the URL is:")
                 print(result.toString())
+
+            elif option == 3:
+                #TODO: implement first dm technique
+                pass
+
+            elif option == 4:
+                # TODO: implement second dm technique
+                pass
+
+            elif option == 5:
+                exit(0)
