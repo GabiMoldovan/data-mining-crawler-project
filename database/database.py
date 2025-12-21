@@ -39,7 +39,7 @@ class Database:
             max_overflow=10
         )
 
-        self.SessionLocal = sessionmaker(bind=self.engine)
+        self.SessionLocal = sessionmaker(bind=self.engine, expire_on_commit=False)
 
     def get_session(self):
         # Get a database session, ensuring tables are created first
