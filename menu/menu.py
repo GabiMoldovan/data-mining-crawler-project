@@ -2,6 +2,7 @@ import asyncio
 
 from model import Website, CrawledUrl
 from service.crawlerService import CrawlerService
+from service.miningService import MiningService
 from service.scraperService import ScraperService
 from service.websiteService import WebsiteService
 
@@ -13,13 +14,14 @@ class Menu:
             cls._instance = super(Menu, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, websiteService: WebsiteService, scraperService: ScraperService, crawlerService: CrawlerService):
+    def __init__(self, websiteService: WebsiteService, scraperService: ScraperService, crawlerService: CrawlerService, miningService: MiningService):
         if hasattr(self, "_initialized") and self._initialized:
             return
 
         self.__websiteService = websiteService
         self.__scraperService = scraperService
         self.__crawlerService = crawlerService
+        self.__miningService = miningService
         self._initialized = True
 
     async def printMenu(self):
@@ -28,7 +30,7 @@ class Menu:
                 "1. Ruleaza crawler pe Bershka si extrage produsele (!!! SE STERG PRODUSELE EXTRASE ANTERIOR DIN BAZA DE DATE !!!)")
             print("2. Scrape URL")
             print("3. Tehnica de data mining 1")
-            print("4. Tehnica de data mining 2")
+            print("4. Regression")
             print("5. Exit\n")
 
             option = int(await asyncio.to_thread(input, "Alegeti optiunea: "))
@@ -121,8 +123,12 @@ class Menu:
                 pass
 
             elif option == 4:
-                # TODO: implement second dm technique
-                pass
+                print("\n--- Running Regression ---")
+
+                result = self.__miningService.performMining()
+                print("\n--- Results ---")
+                print(result)
+                print("\n")
 
             elif option == 5:
                 exit(0)
