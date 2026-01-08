@@ -47,7 +47,7 @@ class Menu:
                     website_id = self.__websiteService.getWebsiteByName(websiteUrl).id
 
                     # Number of pages that you want to crawl. Maybe make it to be given as input?
-                    max_pages = 50
+                    max_pages = 20
 
                     # Crawl website
                     results = await asyncio.to_thread(
