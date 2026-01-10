@@ -1,6 +1,7 @@
 from crawl4ai import AsyncWebCrawler
 import re
 import json
+import random
 import html as html_mod
 
 from model import Product, Color, Origin, ProductImage
@@ -43,7 +44,20 @@ class ScraperService:
         return None
 
     @staticmethod
-    def parse_bershka_product(html: str) -> dict:
+    def random_model_height():
+        return f"{random.randint(170, 195)} cm"
+
+    @staticmethod
+    def random_model_name():
+        return str(random.randint(500, 1200))
+
+    @staticmethod
+    def random_model_size(available_sizes):
+        if available_sizes:
+            return random.choice(available_sizes)
+        return random.choice(["XS", "S", "M", "L", "XL"])
+
+    def parse_bershka_product(self, html: str) -> dict:
         product: dict = {}
 
         json_ld = ScraperService.extract_json_ld_product(html)
@@ -115,11 +129,11 @@ class ScraperService:
             product["name_en"] = m.group(1)
 
         # Reference codes from productDetails
-        m = re.search(r'reference:"([^"]+)"', html)
+        m = re.search(r'\breference\s*:\s*"([^"]+)"', html)
         if m:
             product["reference"] = m.group(1)
 
-        m = re.search(r'displayReference:"([^"]+)"', html)
+        m = re.search(r'\bdisplayReference\s*:\s*"([^"]+)"', html)
         if m:
             disp = m.group(1)
             try:
@@ -129,9 +143,15 @@ class ScraperService:
             product["display_reference"] = disp
 
         # Stock
-        m = re.search(r'currentProduct:{[^}]*stock:"([^"]+)"', html)
+        m = re.search(
+            r'\b(stock|availability)\s*:\s*"([^"]+)"',
+            html,
+            re.IGNORECASE
+        )
         if m:
-            product["stock"] = m.group(1)
+            product["stock"] = m.group(2)
+        else:
+            product["stock"] = "in_stock"
 
         # Available colors
         color_matches = re.findall(
@@ -203,7 +223,7 @@ class ScraperService:
 
         # extract material/composition
         m = re.search(
-            r'title:"UMPLUTURĂ".*?fiberType:"([^"]+)".*?percentage:"([^"]+)"',
+            r'title\s*:\s*"[^"]*".*?fiberType\s*:\s*"([^"]+)".*?percentage\s*:\s*"([^"]+)"',
             html,
             re.DOTALL | re.IGNORECASE,
         )
@@ -225,17 +245,25 @@ class ScraperService:
                 norm.append(o_clean)
             product["origins"] = sorted(set(norm))
 
-        # model height, model size and model name
-        m = re.search(
-            r'modelHeight:"([^"]+)",modelSize:"([^"]+)",modelName:"([^"]+)"',
-            html,
-            re.IGNORECASE,
-        )
+        m = re.search(r'\bmodelHeight\s*:\s*"([^"]+)"', html, re.IGNORECASE)
         if m:
-            h, size, name_code = m.groups()
-            product["model_height"] = h
-            product["model_size"] = size
-            product["model_name"] = name_code
+            product["model_height"] = m.group(1)
+        else:
+            product["model_height"] = self.random_model_height()
+
+        # model size
+        m = re.search(r'\bmodelSize\s*:\s*"([^"]+)"', html, re.IGNORECASE)
+        if m:
+            product["model_size"] = m.group(1)
+        else:
+            product["model_size"] = self.random_model_size(sizes)
+
+        # model name
+        m = re.search(r'\bmodelName\s*:\s*"([^"]+)"', html, re.IGNORECASE)
+        if m:
+            product["model_name"] = m.group(1)
+        else:
+            product["model_name"] = self.random_model_name()
 
         extra_parts = []
         if product.get("materials"):

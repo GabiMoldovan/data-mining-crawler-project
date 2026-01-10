@@ -355,8 +355,13 @@ class CrawlerService:
         }
 
     def close(self):
-        # Close the WebDriver
-        if self._driver:
-            self._driver.quit()
+        try:
+            if self._driver:
+                self._driver.quit()
+        except Exception:
+            pass
+        finally:
             self._driver = None
-            print("WebDriver closed")
+            self._initialized = False
+            CrawlerService._instance = None
+            print("WebDriver fully stopped")

@@ -14,13 +14,12 @@ class Menu:
             cls._instance = super(Menu, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, websiteService: WebsiteService, scraperService: ScraperService, crawlerService: CrawlerService, miningService: MiningService):
+    def __init__(self, websiteService: WebsiteService, scraperService: ScraperService, miningService: MiningService):
         if hasattr(self, "_initialized") and self._initialized:
             return
 
         self.__websiteService = websiteService
         self.__scraperService = scraperService
-        self.__crawlerService = crawlerService
         self.__miningService = miningService
         self._initialized = True
 
@@ -51,14 +50,16 @@ class Menu:
                     # Number of pages that you want to crawl. Maybe make it to be given as input?
                     max_pages = 50
 
+                    crawlerService = CrawlerService()
+
                     # Crawl website
                     results = await asyncio.to_thread(
-                        self.__crawlerService.crawl_website,
+                        crawlerService.crawl_website,
                         websiteUrl,
                         max_pages,
                         True
                     )
-                    self.__crawlerService.close()
+                    crawlerService.close()
 
                     # Read every crawled url for products
                     lines = await asyncio.to_thread(

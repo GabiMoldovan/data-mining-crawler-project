@@ -1,7 +1,6 @@
 from menu.menu import Menu
 from repository.transactionRepository import TransactionRepository
 from repository.websiteRepository import WebsiteRepository
-from service.crawlerService import CrawlerService
 from service.miningService import MiningService
 from service.scraperService import ScraperService
 from service.websiteService import WebsiteService
@@ -14,10 +13,9 @@ async def main():
     transactionRepository = TransactionRepository()
     websiteService = WebsiteService(websiteRepository)
     scraperService = ScraperService()
-    crawlerService = CrawlerService()
     miningService = MiningService(transactionRepository)
 
-    menu = Menu(websiteService, scraperService, crawlerService, miningService)
+    menu = Menu(websiteService, scraperService, miningService)
     await menu.printMenu()
 
 if __name__ == "__main__":
