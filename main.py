@@ -11,10 +11,11 @@ import asyncio
 
 async def main():
     websiteRepository = WebsiteRepository()
+    transactionRepository = TransactionRepository()
     websiteService = WebsiteService(websiteRepository)
     scraperService = ScraperService()
     crawlerService = CrawlerService()
-    miningService = MiningService()
+    miningService = MiningService(transactionRepository)
 
     menu = Menu(websiteService, scraperService, crawlerService, miningService)
     await menu.printMenu()

@@ -1,25 +1,9 @@
 from sqlalchemy import text
-from database import Database, Base
-from model import CrawledUrl
-from model.product import Product
-from model.website import Website
-
+from database import Database
 
 class TransactionRepository:
-    _instance = None
-
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super(TransactionRepository, cls).__new__(cls)
-        return cls._instance
-
-
     def __init__(self):
-        if hasattr(self, "_initialized") and self._initialized:
-            return
-
         self.__db = Database()
-        self._initialized = True
 
 
     def getRegressionData(self):

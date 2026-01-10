@@ -125,10 +125,9 @@ class Menu:
             elif option == 4:
                 print("\n--- Running Regression ---")
 
-                result = self.__miningService.performMining()
+                result = self.__miningService.trainRegressionAlgorithms()
                 print("\n--- Results ---")
-                print(result)
-                print("\n")
+                print(result, "\n")
 
             elif option == 5:
                 exit(0)

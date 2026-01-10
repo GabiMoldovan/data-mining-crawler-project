@@ -8,11 +8,11 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, r2_score
 
 class MiningService:
-    def __init__(self):
-        self.repository = TransactionRepository()
+    def __init__(self, transactionRepository):
+        self.__transactionRepository = transactionRepository
 
-    def performMining(self):
-        raw_data = self.repository.getRegressionData()
+    def trainRegressionAlgorithms(self):
+        raw_data = self.__transactionRepository.getRegressionData()
         if not raw_data:
             return "Nu exista date suficiente in baza de date"
 
@@ -30,6 +30,8 @@ class MiningService:
         y = df['price']
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+        test_product_names = df.loc[X_test.index, 'name'].values
 
         # ALG 1: Linear Regression
         print("Antrenare Algoritm 1: Regresie Liniară...")
@@ -50,9 +52,10 @@ class MiningService:
         pipeline_rf.fit(X_train, y_train)
         preds_rf = pipeline_rf.predict(X_test)
 
-        return self._printReport(y_test, preds_lr, preds_rf)
+        return self._printReport(y_test, preds_lr, preds_rf, test_product_names)
 
-    def _printReport(self, y_true, preds_lr, preds_rf):
+    @staticmethod
+    def _printReport(y_true, preds_lr, preds_rf, product_names):
         mae_lr = mean_absolute_error(y_true, preds_lr)
         mae_rf = mean_absolute_error(y_true, preds_rf)
 
@@ -61,21 +64,27 @@ class MiningService:
 
         winner = "Random Forest" if mae_rf < mae_lr else "Linear Regression"
 
-        report = (
-            f"\n=== RAPORT DATA MINING (Predicție Preț) ===\n"
-            f"Set de date: {len(y_true) + len(preds_lr)} produse Bershka\n"
-            f"Tehnică folosită: Analiză Textuală (TF-IDF) + Regresie\n\n"
+        report = f"\n=== RAPORT DATA MINING (Predictie Pret) ===\n"
+        report += f"Produse analizate (Test Set): {len(y_true)}\n"
 
-            f"1. Regresie Liniară (Model Simplu):\n"
-            f"   - Eroare Medie: {mae_lr:.2f} RON\n"
-            f"   - Acuratețe: {r2_lr:.4f}\n\n"
+        for name, real_price, pred_lr, pred_rf in zip(product_names, y_true, preds_lr, preds_rf):
+            report += f"PRODUS: {name}\n"
+            report += f" - Pret Real:           {real_price:.2f} RON\n"
+            report += f" - Regresie Liniara:    {pred_lr:.2f} RON (Diferenta: {pred_lr - real_price:.2f})\n"
+            report += f" - Random Forest:       {pred_rf:.2f} RON (Diferenta: {pred_rf - real_price:.2f})\n"
+            report += "-" * 30 + "\n"
 
-            f"2. Random Forest (Model Neliniar):\n"
-            f"   - Eroare Medie: {mae_rf:.2f} RON\n"
-            f"   - Acuratețe: {r2_rf:.4f}\n\n"
+        report += f"\n=== SUMAR PERFORMANTA ===\n"
 
-            f"CONCLUZIE:\n"
-            f"Algoritmul {winner} a performat mai bine.\n"
-        )
+        report += f"1. Regresie Liniara:\n"
+        report += f"   - Eroare Medie Absoluta (MAE): {mae_lr:.2f} RON\n"
+        report += f"   - Acuratete (R2 Score): {r2_lr:.4f}\n\n"
+
+        report += f"2. Random Forest:\n"
+        report += f"   - Eroare Medie Absoluta (MAE): {mae_rf:.2f} RON\n"
+        report += f"   - Acuratete (R2 Score): {r2_rf:.4f}\n\n"
+
+        report += f"CONCLUZIE FINALĂ:\n"
+        report += f"Algoritmul {winner} a performat mai bine per total.\n"
 
         return report
