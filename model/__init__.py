@@ -7,6 +7,8 @@ from .color import Color
 from .origin import Origin
 from .productImage import ProductImage
 from .crawledUrl import CrawledUrl
+from .material import Material
+from .product_material import ProductMaterial
 
 product_colors_table = Table(
     "products_colors",
