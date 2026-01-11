@@ -3,4 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="dm-crawler-project" />
   </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="dm-crawler-project" project-jdk-type="Python SDK" />
 </project>
