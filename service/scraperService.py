@@ -4,7 +4,7 @@ import json
 import random
 import html as html_mod
 
-from model import Product, Color, Origin, ProductImage
+from model import Product, Color, Origin, ProductImage, Material, ProductMaterial
 
 
 class ScraperService:
@@ -21,6 +21,30 @@ class ScraperService:
 
         self._initialized = True
         self.default_timeout = 30000
+
+    @staticmethod
+    def normalize_material_name(raw: str):
+        raw_up = raw.upper()
+
+        is_certified = "CERTIFICAT" in raw_up
+        certification = None
+
+        if "RCS" in raw_up:
+            certification = "RCS"
+        elif "RWS" in raw_up:
+            certification = "RWS"
+
+        clean = (
+            raw_up
+            .replace("CERTIFICAT", "")
+            .replace("RECICLAT", "")
+            .replace("RCS", "")
+            .replace("RWS", "")
+            .strip()
+            .lower()
+        )
+
+        return clean, is_certified, certification
 
     @staticmethod
     def extract_json_ld_product(html: str):
@@ -221,16 +245,157 @@ class ScraperService:
             ref_text = re.sub(r'\s+', ' ', m.group(1)).strip()
             product["reference_text"] = ref_text
 
-        # extract material/composition
-        m = re.search(
-            r'title\s*:\s*"[^"]*".*?fiberType\s*:\s*"([^"]+)".*?percentage\s*:\s*"([^"]+)"',
-            html,
-            re.DOTALL | re.IGNORECASE,
-        )
+        # extract material / composition (WORKS ON YOUR PROVIDED BERSHKA HTML FILES)
         materials = []
-        if m:
-            fiber, perc = m.groups()
-            materials.append(f"Umplutura: {perc} {fiber.title()}")
+
+        # 1) isolate the big minified payload
+        nuxt_start = html.find("window.__NUXT__")
+        if nuxt_start != -1:
+            nuxt_end = html.find("</script>", nuxt_start)
+            nuxt_script = html[nuxt_start:nuxt_end] if nuxt_end != -1 else html[nuxt_start:]
+        else:
+            nuxt_script = ""
+
+        def _decode_js_string(s: str) -> str:
+            # decode only if escape sequences exist; otherwise unicode_escape can corrupt UTF-8
+            if "\\u" in s or "\\x" in s:
+                try:
+                    return s.encode("utf-8").decode("unicode_escape")
+                except Exception:
+                    return s
+            return s
+
+        def _build_nuxt_mapping(script: str) -> dict:
+            """
+            Build mapping param_name -> literal_value from:
+            window.__NUXT__=(function(a,b,c,...){ ... }(arg1,arg2,...));
+            The args list is huge and contains the real strings like "bumbac", "97%".
+            """
+            pm = re.search(r'window\.__NUXT__=\(function\((.*?)\)\{', script)
+            if not pm:
+                return {}
+
+            params = [p.strip() for p in pm.group(1).split(",") if p.strip()]
+
+            # Find the call boundary: the LAST occurrence of "}(" whose next ~600 chars contain NO braces
+            # (that's the args list, which is only literals, no objects).
+            boundary = None
+            for m in reversed(list(re.finditer(r'\}\(', script))):
+                tail = script[m.start() + 2: m.start() + 600]
+                if "{" not in tail and "}" not in tail:
+                    boundary = m.start()
+                    break
+            if boundary is None:
+                return {}
+
+            args_str = script[boundary + 2:].strip()
+            # remove trailing ");" / "))"
+            args_str = re.sub(r'\)\s*;\s*$', '', args_str)
+
+            # Tokenize JS literals incl. void 0 / undefined
+            token_re = re.compile(
+                r'\s*(?:"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|true|false|null|void\s+0|undefined|-?\d+(?:\.\d+)?)\s*(?:,|$)',
+                re.IGNORECASE
+            )
+
+            tokens = []
+            idx = 0
+            while idx < len(args_str) and len(tokens) < len(params):
+                mt = token_re.match(args_str, idx)
+                if not mt:
+                    break
+                tok = mt.group(0).strip()
+                if tok.endswith(","):
+                    tok = tok[:-1]
+                tokens.append(tok)
+                idx = mt.end()
+
+            values = []
+            for t in tokens:
+                tl = t.lower()
+                if t.startswith('"') or t.startswith("'"):
+                    values.append(_decode_js_string(t[1:-1]))
+                elif tl == "true":
+                    values.append(True)
+                elif tl == "false":
+                    values.append(False)
+                elif tl in ("null", "void 0", "undefined"):
+                    values.append(None)
+                else:
+                    values.append(float(t) if "." in t else int(t))
+
+            return dict(zip(params, values))
+
+        mapping = _build_nuxt_mapping(nuxt_script) if nuxt_script else {}
+
+        # 2) Extract pairs where keys can be:
+        #    material: <var_or_"literal">, percentage: <var_or_"literal">
+        #    fiberType: <var_or_"literal">, percentage: <var_or_"literal">
+        pair_re = re.compile(
+            r'(?:material|fiberType)\s*:\s*(?:"([^"]+)"|([A-Za-z_$][\w$]*))\s*,\s*'
+            r'percentage\s*:\s*(?:"([^"]+)"|([A-Za-z_$][\w$]*))',
+            re.IGNORECASE
+        )
+
+        # description (area) can also be literal or var
+        desc_re = re.compile(r'description\s*:\s*(?:"([^"]+)"|([A-Za-z_$][\w$]*))', re.IGNORECASE)
+
+        seen = set()
+
+        for m in pair_re.finditer(nuxt_script):
+            mat_lit, mat_var, perc_lit, perc_var = m.groups()
+
+            mat_raw = mat_lit if mat_lit is not None else mapping.get(mat_var)
+            if not mat_raw or not isinstance(mat_raw, str):
+                continue
+
+            perc_raw = perc_lit if perc_lit is not None else mapping.get(perc_var)
+            if perc_raw is None:
+                continue
+
+            if isinstance(perc_raw, str):
+                mp = re.search(r'(\d{1,3})', perc_raw)
+                if not mp:
+                    continue
+                perc = int(mp.group(1))
+            elif isinstance(perc_raw, int):
+                perc = perc_raw
+            else:
+                continue
+
+            # find nearest description before this pair (area)
+            back = nuxt_script[max(0, m.start() - 300): m.start()]
+            descs = list(desc_re.finditer(back))
+            area = None
+            if descs:
+                dlit, dvar = descs[-1].groups()
+                area = dlit if dlit is not None else mapping.get(dvar)
+
+            # normalize & filter (IMPORTANT: avoids "Intertek 193341" etc.)
+            name, is_certified, certification = self.normalize_material_name(mat_raw)
+
+            # HARD FILTER: accept only textile-ish names after normalize
+            # (otherwise you'll ingest certification providers, random strings, etc.)
+            if not any(k in name.upper() for k in [
+                "BUMBAC", "POLIESTER", "ELASTAN", "VASCOZ", "VISCOZ", "MODAL",
+                "ACRIL", "LÂN", "LANA", "POLIAMID", "NAILON", "NYLON", "IN",
+                "MATASE", "MĂTASE", "PIELE"
+            ]):
+                continue
+
+            key = (name, certification, is_certified, perc, area)
+            if key in seen:
+                continue
+            seen.add(key)
+
+            materials.append({
+                "material": name,
+                "percentage": perc,
+                "area": area,
+                "is_certified": is_certified,
+                "certification": certification
+            })
+
         if materials:
             product["materials"] = materials
 
@@ -266,8 +431,15 @@ class ScraperService:
             product["model_name"] = self.random_model_name()
 
         extra_parts = []
+
         if product.get("materials"):
-            extra_parts.append(" / ".join(product["materials"]))
+            parts = []
+            for m in product["materials"]:
+                label = f'{m["percentage"]}% {m["material"]}'
+                if m["area"]:
+                    label = f'{m["area"]}: {label}'
+                parts.append(label)
+            extra_parts.append(" / ".join(parts))
         if product.get("origins"):
             extra_parts.append("Origine: " + ", ".join(product["origins"]))
         product["extra_info"] = ". ".join(extra_parts) if extra_parts else ""
@@ -304,7 +476,8 @@ class ScraperService:
 
             return product_data
 
-    def createProductWithScrapedData(self, product_data: dict, website_id: int) -> Product:
+    @staticmethod
+    def createProductWithScrapedData(product_data: dict, website_id: int) -> Product:
         product = Product(
             product_name=product_data.get("name"),
             product_description=product_data.get("description"),
@@ -362,6 +535,23 @@ class ScraperService:
 
         images_data = product_data.get("all_images", [])
         seen_image_urls = set()
+
+        materials_data = product_data.get("materials", [])
+
+        for m in materials_data:
+            mat = Material(
+                name=m["material"],
+                certification=m["certification"],
+                is_certified=m["is_certified"]
+            )
+
+            pm = ProductMaterial(
+                material=mat,
+                percentage=m["percentage"],
+                area=m["area"]
+            )
+
+            product.materials.append(pm)
 
         for url in images_data:
             if not url:

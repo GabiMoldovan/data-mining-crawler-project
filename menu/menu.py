@@ -2,6 +2,7 @@ import asyncio
 
 from model import Website, CrawledUrl
 from service.crawlerService import CrawlerService
+from service.miningService import MiningService
 from service.scraperService import ScraperService
 from service.websiteService import WebsiteService
 
@@ -13,12 +14,13 @@ class Menu:
             cls._instance = super(Menu, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, websiteService: WebsiteService, scraperService: ScraperService):
+    def __init__(self, websiteService: WebsiteService, scraperService: ScraperService, miningService: MiningService):
         if hasattr(self, "_initialized") and self._initialized:
             return
 
         self.__websiteService = websiteService
         self.__scraperService = scraperService
+        self.__miningService = miningService
         self._initialized = True
 
     async def printMenu(self):
@@ -27,7 +29,7 @@ class Menu:
                 "1. Ruleaza crawler pe Bershka si extrage produsele (!!! SE STERG PRODUSELE EXTRASE ANTERIOR DIN BAZA DE DATE !!!)")
             print("2. Scrape URL")
             print("3. Tehnica de data mining 1")
-            print("4. Tehnica de data mining 2")
+            print("4. Regression")
             print("5. Exit\n")
 
             option = int(await asyncio.to_thread(input, "Alegeti optiunea: "))
@@ -46,7 +48,7 @@ class Menu:
                     website_id = self.__websiteService.getWebsiteByName(websiteUrl).id
 
                     # Number of pages that you want to crawl. Maybe make it to be given as input?
-                    max_pages = 20
+                    max_pages = 25
 
                     crawlerService = CrawlerService()
 
@@ -118,12 +120,15 @@ class Menu:
                 print(result.toString())
 
             elif option == 3:
-                #TODO: implement first dm technique
+                # TODO: implement first dm technique
                 pass
 
             elif option == 4:
-                # TODO: implement second dm technique
-                pass
+                print("\n--- Running Regression ---")
+
+                result = self.__miningService.trainRegressionAlgorithms()
+                print("\n--- Results ---")
+                print(result, "\n")
 
             elif option == 5:
                 exit(0)

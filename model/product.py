@@ -46,6 +46,12 @@ class Product(Base):
         back_populates="products"
     )
 
+    materials = relationship(
+        "ProductMaterial",
+        back_populates="product",
+        cascade="all, delete-orphan"
+    )
+
     def toString(self) -> str:
         if self.colors:
             colors_str = "\n".join([f"    - {c.color_id} ({c.name})" for c in self.colors])
