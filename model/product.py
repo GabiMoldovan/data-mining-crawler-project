@@ -63,6 +63,16 @@ class Product(Base):
         else:
             origins_str = "    None"
 
+        if self.materials:
+            materials_str = "\n".join([
+                f"    - {pm.percentage}% {pm.material.name}"
+                + (f" ({pm.area})" if pm.area else "")
+                + (f" [cert: {pm.material.certification}]" if pm.material.certification else "")
+                for pm in self.materials
+            ])
+        else:
+            materials_str = "    None"
+
         if self.images:
             images_str = "\n".join([f"    - {img.image_url}" for img in self.images])
         else:
@@ -93,6 +103,7 @@ class Product(Base):
             f"  website: {website_str}\n"
             f"  colors:\n{colors_str}\n"
             f"  origins:\n{origins_str}\n"
+            f"  materials:\n{materials_str}\n"
             f"  images:\n{images_str}"
         )
 
